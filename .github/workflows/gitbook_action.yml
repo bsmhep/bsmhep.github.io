@@ -1,0 +1,40 @@
+name: 'Gitbook Action'
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12
+    - name: install_gitbook_plugins
+      run: |
+        npm install gitbook-cli -g
+        gitbook -v
+        gitbook install
+    - name: build_gitbook
+      run: |
+        gitbook build
+    - name: push_to_pages
+      run: |
+        git clone https://github.com/bsmsoft/bsmsoft.github.io
+        cd bsmsoft.github.io
+        git checkout -b gh-pages origin/gh-pages
+        cd ..
+        cd ./_book
+        git init
+        git config --local user.name "${{ secrets.GIT_NAME }}"
+        git config --local user.email "${{ secrets.GIT_EMAIL }}"
+        git add *
+        git commit -m "update"
+        git push "https://${{ secrets.BSMSOFT_GITHUB_TOKEN }}@github.com/bsmsoft/bsmsoft.github.io" master:gh-pages
+      env:
+        CI: true
